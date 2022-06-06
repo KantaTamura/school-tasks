@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <time.h>
 
 #define NUM_ITEMS 10
 
@@ -45,14 +46,19 @@ int main()
     //fill array with random integers
     for (i = 0; i < NUM_ITEMS; i++) numbers[i] = rand();
     //perform merge sort on array
+    clock_t start, end;
+    start = clock();
     parallel_merge_sort(numbers, temp, NUM_ITEMS);
-
+    end = clock();
+    
     printf("Done with sort.\n");
 
     for (i = 0; i < NUM_ITEMS; i++) {
         printf("%i\n", numbers[i]);
     }
 
+    printf("sort time : %lf\n", (double)(end - start) / CLOCKS_PER_SEC);
+    
     return 0;
 }
 
