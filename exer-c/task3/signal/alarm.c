@@ -29,7 +29,6 @@ void myalarm(int sec) {
         }
         pid[1] = pid[0];
     }
-    //alarm(sec);
 }
 
 void timeout() {
