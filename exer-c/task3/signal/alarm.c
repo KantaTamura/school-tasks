@@ -8,7 +8,28 @@
 #define TIMEOUT 10
 
 void myalarm(int sec) {
-    alarm(sec);
+    static int pid[2] = { 0, -1 };
+    if ((pid[0] = fork()) == -1) {
+        perror("fork failed.");
+        exit(1);
+    }
+    if (pid[0] == 0) {
+        int parent_pid = getppid();
+        sleep(10);
+        if (kill(parent_pid, SIGALRM) == -1) {
+            perror("kill failed.");
+            exit(1);
+        }
+        exit(1);
+    }
+    else {
+        if (pid[1] != -1) if (kill(pid[1], SIGTERM) == -1) {
+            perror("kill failed.");
+            exit(1);
+        }
+        pid[1] = pid[0];
+    }
+    //alarm(sec);
 }
 
 void timeout() {
