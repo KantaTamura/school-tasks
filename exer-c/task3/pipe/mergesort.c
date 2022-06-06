@@ -26,6 +26,7 @@
 #define NUM_ITEMS 10
 
 void mergeSort(int numbers[], int temp[], int array_size);
+void parallel_merge_sort(int numbers[], int temp[], int array_size);
 void m_sort(int numbers[], int temp[], int left, int right);
 void merge(int numbers[], int temp[], int left, int mid, int right);
 
@@ -36,21 +37,33 @@ int temp[NUM_ITEMS];
 int main()
 {
     int i;
+    int p_numbers[NUM_ITEMS], p_temp[NUM_ITEMS];
 
     //seed random number generator
     srand(getpid());
 
     //fill array with random integers
-    for (i = 0; i < NUM_ITEMS; i++)
-        numbers[i] = rand();
+    for (i = 0; i < NUM_ITEMS; i++) {
+        int buf = rand();
+        numbers[i] = buf;
+        p_numbers[i] = buf;
+    }
 
     //perform merge sort on array
     mergeSort(numbers, temp, NUM_ITEMS);
+    parallel_merge_sort(p_numbers, p_temp, NUM_ITEMS);
 
     printf("Done with sort.\n");
 
-    for (i = 0; i < NUM_ITEMS; i++)
+    printf("merge sort ans");
+    for (i = 0; i < NUM_ITEMS; i++) {
         printf("%i\n", numbers[i]);
+    }
+
+    printf("parallel merge sort ans");
+    for (i = 0; i < NUM_ITEMS; i++) {
+        printf("%i\n", p_numbers[i]);
+    }
 
     return 0;
 }
@@ -59,6 +72,25 @@ int main()
 void mergeSort(int numbers[], int temp[], int array_size)
 {
     m_sort(numbers, temp, 0, array_size - 1);
+}
+
+void parallel_merge_sort(int numbers[], int temp[], int array_size) {
+    int num1[array_size / 2], num2[array_size - array_size / 2];
+    int temp1[array_size / 2], temp2[array_size - array_size / 2];
+    for (int i = 0; i < array_size; i++) {
+        if (array_size / 2 > i) num1[i] = numbers[i];
+        else num2[i - array_size / 2] = numbers[i];
+    }
+
+    m_sort(num1, temp1, 0, array_size / 2 - 1);
+    m_sort(num2, temp2, 0, array_size - array_size / 2 - 1);
+
+    for (int i = 0; i < array_size; i++) {
+        if (array_size / 2 > i) numbers[i] = num1[i];
+        else numbers[i] = num2[i - array_size / 2];
+    }
+
+    merge(numbers, temp, 0, (array_size - 1) / 2 + 1, array_size - 1);
 }
 
 
