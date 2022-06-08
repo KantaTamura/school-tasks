@@ -9,7 +9,7 @@
 
 char filename[] = "counter";
 
-int count1() {
+int critical_section() {
     FILE* ct;
     int count;
     if ((ct = fopen(filename, "r")) == NULL) exit(1);
@@ -56,7 +56,7 @@ int main() {
         if (pid == 0) {
             struct sembuf stop_sem = { i, 0, 0 }, sub_sem = { i + 1 , -1, 0 };
             if (semop(sid, &stop_sem, 1) == -1) exit(1);
-            count = count1();
+            count = critical_section();
             if (i < NUMPROCS - 1) if (semop(sid, &sub_sem, 1) == -1) exit(1);
             printf("count = %d\n", count);
             exit(0);
