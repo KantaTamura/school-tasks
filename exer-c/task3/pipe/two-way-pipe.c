@@ -10,6 +10,7 @@ int main(int argc, char** argv) {
     char buf[BUFSIZE];
     int read_parent[2], read_child[2];
     int pid, msglen, status;
+    setbuf(stdout, NULL);
     if (argc != 3) {
         printf("bad argument.\n");
         exit(1);
