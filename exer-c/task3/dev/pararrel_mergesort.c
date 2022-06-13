@@ -5,7 +5,7 @@
 #include <time.h>
 
 #define NUM_ITEMS 10
-#define PROCESS_NUM 2
+#define PROCESS_NUM 6
 
 void mergeSort(int numbers[], int temp[], int array_size);
 void m_sort(int numbers[], int temp[], int left, int right);

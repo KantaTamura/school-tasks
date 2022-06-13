@@ -6,39 +6,21 @@
 #include <string.h>
 #include <sys/wait.h>
 
-#define NUMPROCS 4
+#define NUMPROCS 6
 #define FILE_LINE 10
 
-char filename[256] = "file";
-
-void make_file_name(char* file, int num) {
-    strcpy(file, filename);
-    char add_file_name[128] = { '-', num + '0' };
-    strcat(file, add_file_name);
+void stop_process1(int r) {
+    sleep((NUMPROCS - r) * 4);
 }
 
-void file_write(int num) {
-    char file[256];
-    make_file_name(file, num);
-    FILE* fp;
-    if ((fp = fopen(file, "w")) == NULL) exit(1);
-    for (int i = 0; i < FILE_LINE; i++) fprintf(fp, "%d\n", rand());
-}
-
-void file_read(int num, int line[FILE_LINE]) {
-    char file[256];
-    make_file_name(file, num);
-    FILE* fp;
-    if ((fp = fopen(file, "r")) == NULL) exit(1);
-    for (int i = 0; i < FILE_LINE; i++) fscanf(fp, "%d\n", line[i]);
+void stop_process2(int r) {
+    sleep(r * 4);
 }
 
 int main() {
     int pid, status;
     // set stdout to be unbufferd
     setbuf(stdout, NULL);
-
-    srand(getpid());
 
     // Preparing the semaphore
     key_t key;
@@ -61,13 +43,12 @@ int main() {
         // Child process
         if (pid == 0) {
             struct sembuf stop_sem = { 0, 0, 0 }, sub_sem = { 0 , -1, 0 };
-            file_write(i);
+            stop_process1(i);
             printf("Process-%d:stop\n", i);
             if (semop(sid, &sub_sem, 1) == -1) exit(1);
             if (semop(sid, &stop_sem, 1) == -1) exit(1);
             printf("Process-%d:restart\n", i);
-            int line[FILE_LINE];
-            file_read(i, line);
+            stop_process2(i);
             printf("Process-%d:success\n", i);
             exit(1);
         }
