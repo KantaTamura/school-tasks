@@ -7,8 +7,17 @@
 #define BUFSIZE 256
 #define TIMEOUT 10
 
+void wait_process() {
+    int status;
+    wait(&status);
+}
+
 void myalarm(int sec) {
     static int pid[2] = { 0, -1 };
+    if (signal(SIGCHLD, wait_process) == SIG_ERR) {
+        perror("signal failed.");
+        exit(1);
+    }
     if ((pid[0] = fork()) == -1) {
         perror("fork failed.");
         exit(1);
