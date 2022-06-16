@@ -1,0 +1,58 @@
+#!/bin/sh
+
+result=result.html
+
+tmpfile1=/tmp/sample.$$1
+tmpfile2=/tmp/sample.$$2
+
+if [ $# -eq 0 ]; then
+	echo "Usage: $0 file [files ...]"
+	exit 1
+fi
+
+trap "rm -f ${tmpfile1} ${tmpfile2}" 0 1 2 13 15
+
+rm -f ${tmpfile1}
+for i in $@; do
+	if [ -f ${i} ]; then
+		echo ${i} >> ${tmpfile1}
+	else
+		echo "can't find ${i}"
+	fi
+done
+test -f ${tmpfile1} || exit 0
+files="`sort < ${tmpfile1}`"
+
+cat - > ${tmpfile2} <<EOF
+<html>
+<head>
+<title>File Contents</title>
+</head>
+<body>
+<h1>File Contents</h1>
+EOF
+
+c=1
+for i in ${files}; do
+	echo "<a href=\"#${i}\">${c} ${i}</a><br>" >> ${tmpfile2}
+	c=`expr ${c} + 1`
+done
+
+c=1
+for i in ${files}; do
+	echo "<h2><a name=\"${i}\">${c} ${i}</a></h2>" >> ${tmpfile2}
+	echo '<pre>' >> ${tmpfile2}
+	cat ${i} >> ${tmpfile2}
+	echo '</pre>' >> ${tmpfile2}
+	c=`expr ${c} + 1`
+done
+
+cat - >> ${tmpfile2}<<EOF
+</body>
+</html>
+EOF
+
+cp ${tmpfile2} ${result}
+rm -f ${tmpfile2}
+
+exit 0
