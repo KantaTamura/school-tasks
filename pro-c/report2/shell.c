@@ -7,6 +7,7 @@ typedef struct ShellInfo {
 } ShellInfo;
 
 int main() {
+  system("clear");
   ShellInfo main_shell = {"~"};
   for (;;) {
     char input_string_buffer[1024] = "";
