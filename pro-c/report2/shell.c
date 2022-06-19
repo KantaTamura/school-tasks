@@ -1,14 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+
+typedef struct Command {
+  char command_name[1024];
+  size_t command_length;
+} Command;
 
 typedef struct ShellInfo {
   char current_dir[1024];
+  Command buffer_command[5];
+  uint8_t buffer_command_num;
 } ShellInfo;
 
 int main() {
   system("clear");
-  ShellInfo main_shell = {"~"};
+  ShellInfo main_shell;
+  //TODO: error handling
+  strcpy(main_shell.current_dir, "~");
+  main_shell.buffer_command_num = 0;
   for (;;) {
     char input_string_buffer[1024] = "";
     size_t input_string_length = 0;
