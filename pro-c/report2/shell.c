@@ -2,12 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct ShellInfo {
+  char current_dir[1024];
+} ShellInfo;
+
 int main() {
+  ShellInfo main_shell = {"~"};
   for (;;) {
     char input_string_buffer[1024] = "";
     size_t input_string_length = 0;
 
-    printf("> ");
+    printf("%s > ", main_shell.current_dir);
     if (scanf("%1023[^\n]%zn%*[^\n]", input_string_buffer, &input_string_length) == EOF) {
       fprintf(stderr, "Can't read command\n");
       exit(-1);
