@@ -18,6 +18,7 @@ typedef struct Command {
 } Command;
 
 typedef struct ShellInfo {
+  char user_name[256];
   char current_dir[1024];
   Command buffer_command[32];
   uint8_t buffer_command_num;
@@ -36,7 +37,8 @@ int main() {
     char input_string_buffer[1024] = "";
     size_t input_string_length = 0;
 
-    printf("%s > ", main_shell.current_dir);
+    printf("%s > %s\n", main_shell.user_name, main_shell.current_dir);
+    printf("Command: ");
     if (scanf("%1023[^\n]%zn%*[^\n]", input_string_buffer, &input_string_length) == EOF) {
       fprintf(stderr, "Can't read command\n");
       exit(-1);
@@ -66,6 +68,7 @@ Command new_command(char* name, size_t length, CommandStatus status) {
 // TODO: error handling
 ShellInfo new_shell_info() {
   ShellInfo shell;
+  strcpy(shell.user_name, getenv("USER"));
   strcpy(shell.current_dir, getenv("HOME"));
   shell.buffer_command_num = 0;
   return shell;
