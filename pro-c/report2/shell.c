@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct Command {
   char command_name[1024];
@@ -14,12 +15,14 @@ typedef struct ShellInfo {
   uint8_t buffer_command_num;
 } ShellInfo;
 
+Command new_command();
+ShellInfo new_shell_info();
+
 int main() {
   system("clear");
-  ShellInfo main_shell;
-  //TODO: error handling
-  strcpy(main_shell.current_dir, "~");
-  main_shell.buffer_command_num = 0;
+  
+  ShellInfo main_shell = new_shell_info();
+  
   for (;;) {
     char input_string_buffer[1024] = "";
     size_t input_string_length = 0;
@@ -38,4 +41,20 @@ int main() {
       exit(0);
     }
   }
+}
+
+// TODO: error handling
+Command new_command() {
+  Command command;
+  strcpy(command.command_name, "");
+  command.command_length = 0;
+  return command;
+}
+
+// TODO: error handling
+ShellInfo new_shell_info() {
+  ShellInfo shell;
+  strcpy(shell.current_dir, getenv("HOME"));
+  shell.buffer_command_num = 0;
+  return shell;
 }
