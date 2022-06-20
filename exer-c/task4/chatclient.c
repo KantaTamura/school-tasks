@@ -80,14 +80,14 @@ int main(int argc, char** argv) {
         FD_SET(server_socket, &rfds);
         
         if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
-            /* stdin */
+            // stdin
             if (FD_ISSET(0, &rfds)) {
                 char str[512] = "";
                 if (scanf("%511[^\n]%*[^\n]", str) == EOF) break;
                 scanf("%*c");
                 write(server_socket, str, sizeof(str));
             }
-            /* client_socket */
+            // client_socket
             if (FD_ISSET(server_socket, &rfds)) {
                 char str[1024] = "";
                 int nbytes;
