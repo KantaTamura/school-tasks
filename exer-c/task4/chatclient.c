@@ -17,8 +17,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Usage: %s hostname username\n", argv[0]);
         exit(-1);
     }
-    // TODO: delete
-    printf("hostname : %s, username : %s\n", argv[1], argv[2]);
 
     int server_socket;
     if ((server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
@@ -42,8 +40,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "can't connect %s\n", argv[1]);
         exit(-1);
     }
-    // TODO: delete
-    printf("connected to %s\n", argv[1]);
 
     char connect_str[126];
     if (read(server_socket, connect_str, sizeof(connect_str)) < 0) {
