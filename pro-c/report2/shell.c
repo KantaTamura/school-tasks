@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 typedef enum CommandStatus {
   foreground,
@@ -13,7 +14,7 @@ typedef enum CommandStatus {
 
 typedef struct Command {
   char command_name[1024];
-  size_t command_length;
+  void (*exe_command)();
   CommandStatus status;
 } Command;
 
@@ -24,8 +25,12 @@ typedef struct ShellInfo {
   uint8_t buffer_command_num;
 } ShellInfo;
 
-Command new_command(char* name, size_t length, CommandStatus status);
+Command new_command(char* name, CommandStatus status);
 ShellInfo new_shell_info();
+
+bool starts_with(char* p, char* q);
+
+Command parse_command(char* str, size_t length);
 
 int main() {
   // TODO: Buffer the shell and display the original shell on return
@@ -47,20 +52,25 @@ int main() {
 
     printf("input command : %s, length : %zu\n", input_string_buffer, input_string_length);
 
+    Command current_command = parse_command(input_string_buffer, input_string_length);
 
-    
-    if (strcmp(input_string_buffer, "exit") == 0) {
+    switch (current_command.status) {
+    case foreground:
+    case background:
+      continue;
+    case endshell:
       printf("exit shell\n");
       exit(0);
+    case none:
+      continue;
     }
   }
 }
 
 // TODO: error handling
-Command new_command(char* name, size_t length, CommandStatus status) {
+Command new_command(char* name, CommandStatus status) {
   Command command;
   strcpy(command.command_name, name);
-  command.command_length = length;
   command.status = status;
   return command;
 }
@@ -72,4 +82,16 @@ ShellInfo new_shell_info() {
   strcpy(shell.current_dir, getenv("HOME"));
   shell.buffer_command_num = 0;
   return shell;
+}
+
+bool starts_with(char* p, char* q) {
+  return strncmp(p, q, strlen(q)) == 0;
+}
+
+Command parse_command(char* str, size_t length) {
+  if (starts_with(str, "exit")) {
+    
+    return new_command("exit", endshell);
+  }
+  return new_command("none", none);
 }
