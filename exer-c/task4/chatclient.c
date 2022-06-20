@@ -4,8 +4,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <stdbool.h>
 
 const int port = 10140;
+
+bool starts_with(char* p, char* q);
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -39,4 +42,18 @@ int main(int argc, char** argv) {
     }
     // TODO: delete
     printf("connected to %s\n", argv[1]);
+
+    char connect_str[126];
+    if (read(server_socket, connect_str, sizeof(connect_str)) < 0) {
+        perror("read");
+        exit(-1);
+    }
+    if (!starts_with(connect_str, "REQUEST ACCEPTED\n")) {
+        fprintf(stderr, "not REQUEST ACCEPTED\n");
+        exit(-1);
+    }
+}
+
+bool starts_with(char* p, char* q) {
+    return strncmp(p, q, sizeof(q)) == 0;
 }
