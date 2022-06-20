@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
@@ -7,7 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-const int port = 10140;
+#define port 10140
 
 bool starts_with(char* p, char* q);
 void nl_last_char(char* str);
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
         FD_ZERO(&rfds);
         FD_SET(0, &rfds);
         FD_SET(server_socket, &rfds);
-        
+
         if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
             // stdin
             if (FD_ISSET(0, &rfds)) {
