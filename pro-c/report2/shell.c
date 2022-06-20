@@ -4,21 +4,30 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef enum CommandStatus {
+  foreground,
+  background,
+  endshell,
+  none,
+} CommandStatus;
+
 typedef struct Command {
   char command_name[1024];
   size_t command_length;
+  CommandStatus status;
 } Command;
 
 typedef struct ShellInfo {
   char current_dir[1024];
-  Command buffer_command[5];
+  Command buffer_command[32];
   uint8_t buffer_command_num;
 } ShellInfo;
 
-Command new_command();
+Command new_command(char* name, size_t length, CommandStatus status);
 ShellInfo new_shell_info();
 
 int main() {
+  // TODO: Buffer the shell and display the original shell on return
   system("clear");
   
   ShellInfo main_shell = new_shell_info();
@@ -35,6 +44,8 @@ int main() {
     scanf("%*c");
 
     printf("input command : %s, length : %zu\n", input_string_buffer, input_string_length);
+
+
     
     if (strcmp(input_string_buffer, "exit") == 0) {
       printf("exit shell\n");
@@ -44,10 +55,11 @@ int main() {
 }
 
 // TODO: error handling
-Command new_command() {
+Command new_command(char* name, size_t length, CommandStatus status) {
   Command command;
-  strcpy(command.command_name, "");
-  command.command_length = 0;
+  strcpy(command.command_name, name);
+  command.command_length = length;
+  command.status = status;
   return command;
 }
 
