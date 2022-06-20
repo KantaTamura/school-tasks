@@ -58,6 +58,17 @@ int main(int argc, char** argv) {
     strcpy(username, argv[2]);
     nl_last_char(username);
     write(server_socket, username, sizeof(username));
+
+    char regist_str[126];
+    if (read(server_socket, regist_str, sizeof(regist_str)) < 0) {
+        perror("read");
+        exit(-1);
+    }
+    if (!starts_with(regist_str, "USERNAME REGISTERED\n")) {
+        fprintf(stderr, "not USERNAME REGISTERED\n");
+        exit(-1);
+    }
+    close(server_socket);
 }
 
 bool starts_with(char* p, char* q) {
