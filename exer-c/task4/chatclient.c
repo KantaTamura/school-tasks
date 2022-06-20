@@ -9,6 +9,7 @@
 const int port = 10140;
 
 bool starts_with(char* p, char* q);
+void nl_last_char(char* str);
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -17,7 +18,7 @@ int main(int argc, char** argv) {
     }
     // TODO: delete
     printf("hostname : %s, username : %s\n", argv[1], argv[2]);
-    
+
     int server_socket;
     if ((server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         perror("socket");
@@ -52,8 +53,21 @@ int main(int argc, char** argv) {
         fprintf(stderr, "not REQUEST ACCEPTED\n");
         exit(-1);
     }
+
+    char username[126];
+    strcpy(username, argv[2]);
+    nl_last_char(username);
+    write(server_socket, username, sizeof(username));
 }
 
 bool starts_with(char* p, char* q) {
     return strncmp(p, q, sizeof(q)) == 0;
+}
+
+void nl_last_char(char* str) {
+    for (int i = 0;;i++)
+        if (str[i] == '\0') {
+            *(str + i) = '\n';
+            return;
+        }
 }
