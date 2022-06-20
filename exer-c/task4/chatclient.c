@@ -10,7 +10,6 @@
 
 #define port 10140
 
-bool starts_with(char* p, char* q);
 void nl_last_char(char* str);
 
 int main(int argc, char** argv) {
@@ -47,7 +46,7 @@ int main(int argc, char** argv) {
         perror("read");
         exit(-1);
     }
-    if (!starts_with(connect_str, "REQUEST ACCEPTED\n")) {
+    if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n")) != 0) {
         fprintf(stderr, "not REQUEST ACCEPTED\n");
         exit(-1);
     }
@@ -62,7 +61,7 @@ int main(int argc, char** argv) {
         perror("read");
         exit(-1);
     }
-    if (!starts_with(regist_str, "USERNAME REGISTERED\n")) {
+    if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
         fprintf(stderr, "not USERNAME REGISTERED\n");
         exit(-1);
     }
@@ -77,14 +76,12 @@ int main(int argc, char** argv) {
         FD_SET(server_socket, &rfds);
 
         if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
-            // stdin
             if (FD_ISSET(0, &rfds)) {
                 char str[512] = "";
                 if (scanf("%511[^\n]%*[^\n]", str) == EOF) break;
                 scanf("%*c");
                 write(server_socket, str, sizeof(str));
             }
-            // client_socket
             if (FD_ISSET(server_socket, &rfds)) {
                 char str[1024] = "";
                 int nbytes;
@@ -97,12 +94,7 @@ int main(int argc, char** argv) {
             }
         }
     }
-
     close(server_socket);
-}
-
-bool starts_with(char* p, char* q) {
-    return strncmp(p, q, sizeof(q)) == 0;
 }
 
 void nl_last_char(char* str) {

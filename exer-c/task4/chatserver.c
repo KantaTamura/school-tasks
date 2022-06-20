@@ -77,14 +77,14 @@ int main() {
                 }
 
                 if (server.user_num >= max_user_num) {
-                    printf("couldn't join because 5 people are currently participating.\n");
-                    char* dis_connect_str = "REQUEST REJECTED\n";
+                    printf("couldn't join because max people (%d) are currently participating.\n", max_user_num);
+                    char dis_connect_str[18] = "REQUEST REJECTED\n";
                     write(user_socket, dis_connect_str, sizeof(dis_connect_str));
                     close(user_socket);
                     continue;
                 }
 
-                char* connect_str = "REQUEST ACCEPTED\n";
+                char connect_str[18] = "REQUEST ACCEPTED\n";
                 write(user_socket, connect_str, sizeof(connect_str));
 
                 char username[128];
@@ -98,19 +98,18 @@ int main() {
                 for (int i = 0; i < server.user_num; i++)
                     if (strcmp(server.users->name, username) == 0) {
                         not_registed = false;
-                        printf("couldn't join because there was a participant with the same name.\n");
-                        char* not_regist_str = "USERNAME REJECTED\n";
+                        printf("username : \"%s\" couldn't join because there was a participant with the same name.\n", username);
+                        char not_regist_str[19] = "USERNAME REJECTED\n";
                         write(user_socket, not_regist_str, sizeof(not_regist_str));
                         close(user_socket);
                     }
                 if (!not_registed) continue;
 
-                char* regist_str = "USERNAME REGISTERED\n";
+                char regist_str[21] = "USERNAME REGISTERED\n";
                 write(user_socket, regist_str, sizeof(regist_str));
+                printf("username : \"%s\" join!\n", username);
 
                 new_user(&server, username, user_socket);
-
-                printf("new user : %s, id : %d\n", server.users[server.user_num - 1].name, server.user_num - 1);
             }
             for (int i = 0; i < server.user_num; i++)
                 if (FD_ISSET(server.users[i].socket, &rfds)) {
