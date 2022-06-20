@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
@@ -68,6 +69,38 @@ int main(int argc, char** argv) {
         fprintf(stderr, "not USERNAME REGISTERED\n");
         exit(-1);
     }
+
+    fd_set rfds;
+    struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    for (;;) {
+        FD_ZERO(&rfds);
+        FD_SET(0, &rfds);
+        FD_SET(server_socket, &rfds);
+        
+        if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
+            /* stdin */
+            if (FD_ISSET(0, &rfds)) {
+                char str[512] = "";
+                if (scanf("%511[^\n]%*[^\n]", str) == EOF) break;
+                scanf("%*c");
+                write(server_socket, str, sizeof(str));
+            }
+            /* client_socket */
+            if (FD_ISSET(server_socket, &rfds)) {
+                char str[1024] = "";
+                int nbytes;
+                if ((nbytes = read(server_socket, str, sizeof(str))) < 0) {
+                    perror("read");
+                    break;
+                }
+                else if (nbytes == 0) break;
+                printf("%s\n", str);
+            }
+        }
+    }
+
     close(server_socket);
 }
 
