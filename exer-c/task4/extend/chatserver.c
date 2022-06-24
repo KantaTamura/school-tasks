@@ -135,6 +135,16 @@ int main() {
                         pop_user(&server, i);
                         continue;
                     }
+                    if (strcmp(receive_str, "\\list") == 0) {
+                        char send_str[1024] = ": <userlist>\n";
+                        for (int i = 0; i < server.user_num; i++) {
+                            strcat(send_str, ": ");
+                            strcat(send_str, server.users[i].name);
+                            if (server.user_num - 1 != i) strcat(send_str, "\n");
+                        }
+                        write(server.users[i].socket, send_str, sizeof(send_str));
+                        continue;
+                    }
 
                     char time_str[128];
                     get_time_str(time_str, sizeof(time_str));
