@@ -11,6 +11,7 @@
 #define port 10140
 
 void nl_last_char(char* str);
+void null_last_char(char* str);
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -53,17 +54,30 @@ int main(int argc, char** argv) {
 
     char username[126];
     strcpy(username, argv[2]);
-    nl_last_char(username);
-    write(server_socket, username, sizeof(username));
 
-    char regist_str[126];
-    if (read(server_socket, regist_str, sizeof(regist_str)) < 0) {
-        perror("read");
-        exit(-1);
-    }
-    if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
-        fprintf(stderr, "not USERNAME REGISTERED\n");
-        exit(-1);
+    for (;;) {
+        nl_last_char(username);
+        write(server_socket, username, sizeof(username));
+        
+        char regist_str[126];
+        if (read(server_socket, regist_str, sizeof(regist_str)) < 0) {
+            perror("read");
+            exit(-1);
+        }
+        if (strncmp(regist_str, "USERNAME REJECTED\n", sizeof("USERNAME REJECTED\n")) == 0) {
+            null_last_char(username);
+            printf("%s is registered!\nPlease enter a new username > ", username);
+            if (scanf("%255[^\n]%*[^\n]", username) != 1) {
+                return 1;
+            }
+            scanf("%*c");
+            continue;
+        }
+        if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
+            fprintf(stderr, "not USERNAME REGISTERED\n");
+            exit(-1);
+        }
+        else { break; }
     }
 
     fd_set rfds;
@@ -101,6 +115,14 @@ void nl_last_char(char* str) {
     for (int i = 0;;i++)
         if (str[i] == '\0') {
             *(str + i) = '\n';
+            return;
+        }
+}
+
+void null_last_char(char* str) {
+    for (int i = 0;;i++)
+        if (str[i] == '\n') {
+            *(str + i) = '\0';
             return;
         }
 }

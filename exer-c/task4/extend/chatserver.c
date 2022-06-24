@@ -92,29 +92,35 @@ int main() {
                 write(user_socket, connect_str, sizeof(connect_str));
 
                 char username[128];
-                if (read(user_socket, username, sizeof(username)) < 0) {
-                    perror("read");
-                    exit(-1);
-                }
-                null_last_char(username);
+                for (;;) {
+                    ssize_t nbytes;
+                    if ((nbytes = read(user_socket, username, sizeof(username))) < 0) {
+                        perror("read");
+                        exit(-1);
+                    }
+                    else if (nbytes == 0) {
+                        printf("%s disconnected\n", inet_ntoa(client.sin_addr));
+                        close(user_socket);
+                        break;
+                    }
+                    null_last_char(username);
 
-                bool not_registed = true;
-                for (int i = 0; i < server.user_num; i++)
-                    if (strcmp(server.users->name, username) == 0) {
-                        not_registed = false;
+                    bool not_registed = true;
+                    for (int i = 0; i < server.user_num; i++)
+                        if (strcmp(server.users->name, username) == 0) not_registed = false;
+                    if (!not_registed) {
                         printf("username : \"%s\" couldn't join because there was a participant with the same name.\n", username);
                         char not_regist_str[19] = "USERNAME REJECTED\n";
                         write(user_socket, not_regist_str, sizeof(not_regist_str));
-                        close(user_socket);
+                        continue;
                     }
-                if (!not_registed) continue;
 
-                char regist_str[21] = "USERNAME REGISTERED\n";
-                write(user_socket, regist_str, sizeof(regist_str));
-                printf("username : \"%s\" join!\n", username);
-                //printf("%s\n", inet_ntoa(client.sin_addr));
-
-                new_user(&server, username, user_socket, inet_ntoa(client.sin_addr));
+                    char regist_str[21] = "USERNAME REGISTERED\n";
+                    write(user_socket, regist_str, sizeof(regist_str));
+                    printf("username : \"%s\" join!\n", username);
+                    new_user(&server, username, user_socket, inet_ntoa(client.sin_addr));
+                    break;
+                }
             }
             for (int i = 0; i < server.user_num; i++)
                 if (FD_ISSET(server.users[i].socket, &rfds)) {
@@ -125,7 +131,7 @@ int main() {
                         break;
                     }
                     else if (nbytes == 0) {
-                        printf("name : %s, id : %d\n", server.users[i].name, i);
+                        printf("username : \"%s\" logout!\n", server.users[i].name);
                         pop_user(&server, i);
                         continue;
                     }
