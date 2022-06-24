@@ -120,7 +120,7 @@ int main() {
                         break;
                     }
                     else if (nbytes == 0) {
-                        printf("name : %s, id : %d\n", server.users[i].name, i);
+                        printf("username : \"%s\" logout!\n", server.users[i].name);
                         pop_user(&server, i);
                         continue;
                     }
