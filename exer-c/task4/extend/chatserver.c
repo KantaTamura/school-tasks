@@ -135,7 +135,16 @@ int main() {
                         pop_user(&server, i);
                         continue;
                     }
-                    if (strcmp(receive_str, "\\list") == 0) {
+                    if (strncmp(receive_str, "\\list", strlen("\\list")) == 0) {
+                        bool is_ok = true;
+                        for (int i = strlen("\\list"); receive_str[i] != '\0'; i++)
+                            if (receive_str[i] != ' ') is_ok = false;
+                        if (!is_ok) {
+                            char send_str[1024] = "\x1b[31m<list> command takes no arguments!\x1b[39m";
+                            write(server.users[i].socket, send_str, sizeof(send_str));
+                            continue;
+                        }
+                        printf("receive list command from %s\n", server.users[i].name);
                         char send_str[1024] = ": <userlist>\n";
                         for (int i = 0; i < server.user_num; i++) {
                             strcat(send_str, ": ");
@@ -145,6 +154,7 @@ int main() {
                         write(server.users[i].socket, send_str, sizeof(send_str));
                         continue;
                     }
+                    
 
                     char time_str[128];
                     get_time_str(time_str, sizeof(time_str));
