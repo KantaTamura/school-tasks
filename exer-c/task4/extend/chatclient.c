@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         exit(-1);
     }
     if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n")) != 0) {
-        fprintf(stderr, "not REQUEST ACCEPTED\n");
+        fprintf(stderr, "request rejected!\n");
         exit(-1);
     }
 

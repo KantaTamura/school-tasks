@@ -102,6 +102,7 @@ int main() {
                         char not_regist_str[19] = "USERNAME REJECTED\n";
                         write(user_socket, not_regist_str, sizeof(not_regist_str));
                         close(user_socket);
+                        break;
                     }
                 if (!not_registed) continue;
 

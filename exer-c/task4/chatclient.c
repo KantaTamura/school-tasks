@@ -10,6 +10,7 @@
 
 #define port 10140
 
+void exit_socket(int socket);
 void nl_last_char(char* str);
 void null_last_char(char* str);
 
@@ -33,23 +34,23 @@ int main(int argc, char** argv) {
     struct hostent* hp;
     if ((hp = gethostbyname(argv[1])) == NULL) {
         fprintf(stderr, "unknown server %s\n", argv[1]);
-        exit(1);
+        exit_socket(server_socket);
     }
     memcpy(&server.sin_addr, hp->h_addr_list[0], hp->h_length);
 
     if (connect(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) == -1) {
         fprintf(stderr, "can't connect %s\n", argv[1]);
-        exit(-1);
+        exit_socket(server_socket);
     }
 
     char connect_str[126];
     if (read(server_socket, connect_str, sizeof(connect_str)) < 0) {
         perror("read");
-        exit(-1);
+        exit_socket(server_socket);
     }
     if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n")) != 0) {
-        fprintf(stderr, "not REQUEST ACCEPTED\n");
-        exit(-1);
+        fprintf(stderr, "request rejected!\n");
+        exit_socket(server_socket);
     }
 
     char username[126];
@@ -60,12 +61,12 @@ int main(int argc, char** argv) {
     char regist_str[126];
     if (read(server_socket, regist_str, sizeof(regist_str)) < 0) {
         perror("read");
-        exit(-1);
+        exit_socket(server_socket);
     }
     if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
         null_last_char(username);
         fprintf(stderr, "%s is registered!\n", username);
-        exit(-1);
+        exit_socket(server_socket);
     }
 
     fd_set rfds;
@@ -98,6 +99,11 @@ int main(int argc, char** argv) {
         }
     }
     close(server_socket);
+}
+
+void exit_socket(int socket) {
+    close(socket);
+    exit(-1);
 }
 
 void nl_last_char(char* str) {
