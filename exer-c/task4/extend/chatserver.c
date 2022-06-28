@@ -154,7 +154,25 @@ int main() {
                         write(server.users[i].socket, send_str, sizeof(send_str));
                         continue;
                     }
-                    
+                    if (strncmp(receive_str, "\\send", strlen("\\send")) == 0) {
+                        int send_user_num;
+                        bool is_ok = false;
+                        for (int l = 0; l < server.user_num; l++)
+                            if (strncmp(receive_str + strlen("\\send") + 1, server.users[l].name, strlen(server.users[l].name)) == 0) {
+                                is_ok = true;
+                                send_user_num = l;
+                            }
+                        if (!is_ok) {
+                            char send_str[1024] = "\x1b[31m<send> command requires a valid user name!\nYou can look up the username using the <list> command.\x1b[39m";
+                            write(server.users[i].socket, send_str, sizeof(send_str));
+                            continue;
+                        }
+                        char send_str[1024];
+                        sprintf(send_str, "direct message from %s > ", server.users[send_user_num].name);
+                        strcat(send_str, receive_str + strlen("\\send") + strlen(server.users[send_user_num].name) + 2);
+                        write(server.users[send_user_num].socket, send_str, sizeof(send_str));
+                        continue;
+                    }
 
                     char time_str[128];
                     get_time_str(time_str, sizeof(time_str));
