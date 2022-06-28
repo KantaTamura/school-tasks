@@ -119,8 +119,20 @@ int main() {
                     write(user_socket, regist_str, sizeof(regist_str));
                     printf("username : \"%s\" join!\n", username);
                     new_user(&server, username, user_socket, inet_ntoa(client.sin_addr));
+
+                    char send_str[1024];
+                    sprintf(send_str, "username : \"%s\" login!\n: <userlist>\n", username);
+                    for (int i = 0; i < server.user_num; i++) {
+                        strcat(send_str, ": ");
+                        strcat(send_str, server.users[i].name);
+                        if (server.user_num - 1 != i) strcat(send_str, "\n");
+                    }
+                    for (int i = 0; i < server.user_num; i++)
+                        write(server.users[i].socket, send_str, sizeof(send_str));
+
                     break;
                 }
+                //close(user_socket);
             }
             for (int i = 0; i < server.user_num; i++)
                 if (FD_ISSET(server.users[i].socket, &rfds)) {
@@ -132,7 +144,17 @@ int main() {
                     }
                     else if (nbytes == 0) {
                         printf("username : \"%s\" logout!\n", server.users[i].name);
+                        char send_str[1024];
+                        sprintf(send_str, "username : \"%s\" logout!\n: <userlist>\n", server.users[i].name);
                         pop_user(&server, i);
+                        for (int i = 0; i < server.user_num; i++) {
+                            strcat(send_str, ": ");
+                            strcat(send_str, server.users[i].name);
+                            if (server.user_num - 1 != i) strcat(send_str, "\n");
+                        }
+                        for (int i = 0; i < server.user_num; i++)
+                            write(server.users[i].socket, send_str, sizeof(send_str));
+
                         continue;
                     }
                     if (strncmp(receive_str, "\\list", strlen("\\list")) == 0) {
