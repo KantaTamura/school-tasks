@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
                 char str[512] = "";
                 if (scanf("%511[^\n]%*[^\n]", str) == EOF) break;
                 scanf("%*c");
+                printf("\e[A\e[K");
                 write(server_socket, str, sizeof(str));
             }
             if (FD_ISSET(server_socket, &rfds)) {

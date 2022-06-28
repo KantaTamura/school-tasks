@@ -11,6 +11,7 @@
 #define port 10140
 
 void nl_last_char(char* str);
+void null_last_char(char* str);
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -62,7 +63,8 @@ int main(int argc, char** argv) {
         exit(-1);
     }
     if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
-        fprintf(stderr, "not USERNAME REGISTERED\n");
+        null_last_char(username);
+        fprintf(stderr, "%s is registered!\n", username);
         exit(-1);
     }
 
@@ -80,6 +82,7 @@ int main(int argc, char** argv) {
                 char str[512] = "";
                 if (scanf("%511[^\n]%*[^\n]", str) == EOF) break;
                 scanf("%*c");
+                printf("\e[A\e[K");
                 write(server_socket, str, sizeof(str));
             }
             if (FD_ISSET(server_socket, &rfds)) {
@@ -101,6 +104,14 @@ void nl_last_char(char* str) {
     for (int i = 0;;i++)
         if (str[i] == '\0') {
             *(str + i) = '\n';
+            return;
+        }
+}
+
+void null_last_char(char* str) {
+    for (int i = 0;;i++)
+        if (str[i] == '\n') {
+            *(str + i) = '\0';
             return;
         }
 }
