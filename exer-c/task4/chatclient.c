@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         perror("read");
         exit_socket(server_socket);
     }
-    if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n")) != 0) {
+    if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n") - 1) != 0) {
         fprintf(stderr, "request rejected!\n");
         exit_socket(server_socket);
     }
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
         perror("read");
         exit_socket(server_socket);
     }
-    if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
+    if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n") - 1) != 0) {
         null_last_char(username);
         fprintf(stderr, "%s is registered!\n", username);
         exit_socket(server_socket);

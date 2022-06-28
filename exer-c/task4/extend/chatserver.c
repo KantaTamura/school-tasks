@@ -83,13 +83,13 @@ int main() {
                 if (server.user_num >= max_user_num) {
                     printf("couldn't join because max people (%d) are currently participating.\n", max_user_num);
                     char dis_connect_str[18] = "REQUEST REJECTED\n";
-                    write(user_socket, dis_connect_str, sizeof(dis_connect_str));
+                    write(user_socket, dis_connect_str, sizeof(dis_connect_str) - 1);
                     close(user_socket);
                     continue;
                 }
 
                 char connect_str[18] = "REQUEST ACCEPTED\n";
-                write(user_socket, connect_str, sizeof(connect_str));
+                write(user_socket, connect_str, sizeof(connect_str) - 1);
 
                 char username[128];
                 for (;;) {
@@ -107,7 +107,7 @@ int main() {
 
                     bool not_registed = true;
                     for (int i = 0; i < server.user_num; i++)
-                        if (strcmp(server.users->name, username) == 0) not_registed = false;
+                        if (strcmp(server.users[i].name, username) == 0) not_registed = false;
                     if (!not_registed) {
                         printf("username : \"%s\" couldn't join because there was a participant with the same name.\n", username);
                         char not_regist_str[19] = "USERNAME REJECTED\n";
@@ -116,7 +116,7 @@ int main() {
                     }
 
                     char regist_str[21] = "USERNAME REGISTERED\n";
-                    write(user_socket, regist_str, sizeof(regist_str));
+                    write(user_socket, regist_str, sizeof(regist_str) - 1);
                     printf("username : \"%s\" join!\n", username);
                     new_user(&server, username, user_socket, inet_ntoa(client.sin_addr));
 
@@ -189,9 +189,10 @@ int main() {
                             continue;
                         }
                         char send_str[1024];
-                        sprintf(send_str, "direct message from %s > ", server.users[send_user_num].name);
+                        sprintf(send_str, "direct message from %s > ", server.users[i].name);
                         strcat(send_str, receive_str + strlen("\\send") + strlen(server.users[send_user_num].name) + 2);
                         write(server.users[send_user_num].socket, send_str, sizeof(send_str));
+                        printf("direct message from %s to %s\n", server.users[i].name, server.users[send_user_num].name);
                         continue;
                     }
 

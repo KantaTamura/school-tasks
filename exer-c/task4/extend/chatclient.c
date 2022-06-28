@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         perror("read");
         exit(-1);
     }
-    if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n")) != 0) {
+    if (strncmp(connect_str, "REQUEST ACCEPTED\n", sizeof("REQUEST ACCEPTED\n") - 1) != 0) {
         fprintf(stderr, "request rejected!\n");
         exit(-1);
     }
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
             perror("read");
             exit(-1);
         }
-        if (strncmp(regist_str, "USERNAME REJECTED\n", sizeof("USERNAME REJECTED\n")) == 0) {
+        if (strncmp(regist_str, "USERNAME REJECTED\n", sizeof("USERNAME REJECTED\n") - 1) == 0) {
             null_last_char(username);
             printf("%s is registered!\nPlease enter a new username > ", username);
             if (scanf("%255[^\n]%*[^\n]", username) != 1) {
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
             scanf("%*c");
             continue;
         }
-        if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n")) != 0) {
+        if (strncmp(regist_str, "USERNAME REGISTERED\n", sizeof("USERNAME REGISTERED\n") - 1) != 0) {
             fprintf(stderr, "not USERNAME REGISTERED\n");
             exit(-1);
         }

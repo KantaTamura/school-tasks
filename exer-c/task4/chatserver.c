@@ -79,13 +79,13 @@ int main() {
                 if (server.user_num >= max_user_num) {
                     printf("couldn't join because max people (%d) are currently participating.\n", max_user_num);
                     char dis_connect_str[18] = "REQUEST REJECTED\n";
-                    write(user_socket, dis_connect_str, sizeof(dis_connect_str));
+                    write(user_socket, dis_connect_str, sizeof(dis_connect_str) - 1);
                     close(user_socket);
                     continue;
                 }
 
                 char connect_str[18] = "REQUEST ACCEPTED\n";
-                write(user_socket, connect_str, sizeof(connect_str));
+                write(user_socket, connect_str, sizeof(connect_str) - 1);
 
                 char username[128];
                 if (read(user_socket, username, sizeof(username)) < 0) {
@@ -96,7 +96,7 @@ int main() {
 
                 bool not_registed = true;
                 for (int i = 0; i < server.user_num; i++)
-                    if (strcmp(server.users->name, username) == 0) {
+                    if (strcmp(server.users[i].name, username) == 0) {
                         not_registed = false;
                         printf("username : \"%s\" couldn't join because there was a participant with the same name.\n", username);
                         char not_regist_str[19] = "USERNAME REJECTED\n";
@@ -107,7 +107,7 @@ int main() {
                 if (!not_registed) continue;
 
                 char regist_str[21] = "USERNAME REGISTERED\n";
-                write(user_socket, regist_str, sizeof(regist_str));
+                write(user_socket, regist_str, sizeof(regist_str) - 1);
                 printf("username : \"%s\" join!\n", username);
 
                 new_user(&server, username, user_socket);
