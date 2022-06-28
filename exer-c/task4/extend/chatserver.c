@@ -132,7 +132,6 @@ int main() {
 
                     break;
                 }
-                //close(user_socket);
             }
             for (int i = 0; i < server.user_num; i++)
                 if (FD_ISSET(server.users[i].socket, &rfds)) {
