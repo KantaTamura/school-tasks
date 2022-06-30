@@ -1,9 +1,7 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-# np.random.seed(100)
-
-N = 1000
+N = 100
 M = 1000
 
 def montecarlo() -> list:
@@ -24,14 +22,16 @@ def montecarlo() -> list:
 
 
 def draw_hist(pies: list) -> None:
-    kwargs = dict(histtype="stepfilled", alpha=0.7,
-                  normed=True, bins=20, color="red", ec="black")
-    plt.hist(pies, **kwargs)
+    # kwargs = dict(histtype="stepfilled", alpha=0.7,
+    #               normed=True, bins=20, color="red", ec="black")
+    # plt.hist(pies, **kwargs)
+    plt.hist(pies)
     plt.title("pi-list")
     plt.show()
 
 
 def main():
+    # print(montecarlo())
     draw_hist(montecarlo())
     
     
