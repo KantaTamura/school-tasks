@@ -25,7 +25,7 @@ def draw_hist(pies: list) -> None:
     # kwargs = dict(histtype="stepfilled", alpha=0.7,
     #               normed=True, bins=20, color="red", ec="black")
     # plt.hist(pies, **kwargs)
-    plt.hist(pies)
+    plt.hist(pies, bins=20, normed=True)
     plt.title("pi-list")
     plt.show()
 
