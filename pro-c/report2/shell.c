@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 typedef enum CommandStatus {
   foreground,
@@ -15,6 +16,7 @@ typedef enum CommandStatus {
 typedef struct Command {
   char command_name[1024];
   void (*exe_command)();
+  char argument[1024];
   CommandStatus status;
 } Command;
 
@@ -25,19 +27,22 @@ typedef struct ShellInfo {
   uint8_t buffer_command_num;
 } ShellInfo;
 
-Command new_command(char* name, CommandStatus status);
+Command new_command(char* name, void (*exe_command)(ShellInfo*, char*), CommandStatus status, char* argument);
+Command new_command_exit();
+Command new_command_none();
 ShellInfo new_shell_info();
 
 bool starts_with(char* p, char* q);
 
 Command parse_command(char* str, size_t length);
+void func_cd(ShellInfo*, char*);
 
 int main() {
   // TODO: Buffer the shell and display the original shell on return
   system("clear");
-  
+
   ShellInfo main_shell = new_shell_info();
-  
+
   for (;;) {
     char input_string_buffer[1024] = "";
     size_t input_string_length = 0;
@@ -50,13 +55,14 @@ int main() {
     }
     scanf("%*c");
 
-    printf("input command : %s, length : %zu\n", input_string_buffer, input_string_length);
+    printf("\x1b[33minput command : %s, length : %zu\n\x1b[39m", input_string_buffer, input_string_length);
 
     Command current_command = parse_command(input_string_buffer, input_string_length);
 
     switch (current_command.status) {
     case foreground:
     case background:
+      current_command.exe_command(&main_shell, current_command.argument);
       continue;
     case endshell:
       printf("exit shell\n");
@@ -67,11 +73,34 @@ int main() {
   }
 }
 
+Command parse_command(char* str, size_t length) {
+  for (;;str += 1) if (*str != ' ') break;
+  if (starts_with(str, "exit"))
+    return new_command_exit();
+  if (starts_with(str, "cd"))
+    return new_command("cd", func_cd, foreground, str);
+  return new_command_none();
+}
+
 // TODO: error handling
-Command new_command(char* name, CommandStatus status) {
+Command new_command(char* name, void (*exe_command)(ShellInfo*, char*), CommandStatus status, char* argument) {
   Command command;
   strcpy(command.command_name, name);
+  command.exe_command = exe_command;
   command.status = status;
+  strcpy(command.argument, argument + strlen(name) + 1);
+  return command;
+}
+
+Command new_command_exit() {
+  Command command;
+  command.status = endshell;
+  return command;
+}
+
+Command new_command_none() {
+  Command command;
+  command.status = none;
   return command;
 }
 
@@ -88,10 +117,11 @@ bool starts_with(char* p, char* q) {
   return strncmp(p, q, strlen(q)) == 0;
 }
 
-Command parse_command(char* str, size_t length) {
-  if (starts_with(str, "exit")) {
-    
-    return new_command("exit", endshell);
+void func_cd(ShellInfo* shell, char* dir) {
+  struct stat statBuf;
+  if (stat(dir, &statBuf) != 0) {
+    printf("\"%s\": No such file or directory", dir);
+    return;
   }
-  return new_command("none", none);
+  
 }
