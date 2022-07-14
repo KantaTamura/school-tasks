@@ -1,0 +1,32 @@
+
+\documentclass[uplatex, dvipdfmx, 10pt, a4paper]{jsarticle}
+\usepackage{array}
+\usepackage[labelformat=empty,labelsep=none]{caption}
+\usepackage{multirow}
+\newcommand{\mcl}[1]{\multirow{2}{*}{#1}}
+\begin{document}
+
+\begin{table*}[htbp]
+    \centering
+    \caption{\underline{2010 FIFA World Cup Stage1 Result - Group X -}}
+    \begin{tabular*}{\linewidth}{wc{2cm}|wc{2cm}|wc{2cm}|wc{2cm}|wc{2cm}|wc{0.8cm}|wc{0.8cm}|wc{0.8cm}} \hline
+        &  country1 &  country2 &  country3 &  country4 &  win & draw & lose\\ \hline
+        
+        \mcl{country1}  &  \mcl{ }   &  D   &  L   &  W   &  \mcl{1}   &  \mcl{1}   &  \mcl{1}   \\
+                          &     &  1-1  &  0-3  &  2-1  &     &     &     \\ \hline
+        
+        \mcl{country2}  &  D   &  \mcl{ }   &  L   &  W   &  \mcl{1}   &  \mcl{1}   &  \mcl{1}   \\
+                          &  1-1  &     &  0-1  &  2-0  &     &     &     \\ \hline
+        
+        \mcl{country3}  &  W   &  W   &  \mcl{ }   &  D   &  \mcl{2}   &  \mcl{1}   &  \mcl{0}   \\
+                          &  3-0  &  1-0  &     &  0-0  &     &     &     \\ \hline
+        
+        \mcl{country4}  &  L   &  L   &  D   &  \mcl{ }   &  \mcl{0}   &  \mcl{1}   &  \mcl{2}   \\
+                          &  1-2  &  0-2  &  0-0  &     &     &     &     \\ \hline
+        
+    \end{tabular*}
+\end{table*}
+
+\newpage
+
+\end{document}

@@ -138,6 +138,8 @@ def main():
     file = open('group-' + "".join(group_list) + ".tex", 'wt')
     file.write(temp.render({"data": data}))
     file.close()
+    
+    print({"data": data})
 
 
 if __name__ == '__main__':

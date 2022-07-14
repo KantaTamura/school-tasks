@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = 100
+N = 100000
 M = 1000
 
 def montecarlo() -> list:
@@ -28,7 +28,6 @@ def draw_hist(pies: list) -> None:
 
 
 def main():
-    # print(montecarlo())
     draw_hist(montecarlo())
     
     
