@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <dirent.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 
@@ -70,7 +71,13 @@ void func_history(ShellInfo* shell);
 void func_prompt(ShellInfo* shell);
 void func_alias(ShellInfo* shell);
 void func_unalias(ShellInfo* shell);
+void func_cat(ShellInfo* shell);
+void func_echo(ShellInfo* shell);
+void func_wc(ShellInfo* shell);
 void execute_command(ShellInfo* shell);
+
+bool path_exist(ShellInfo* shell, char* path);
+int split_blank(char** args, char* arg);
 
 bool does_exist_directory(char* path);
 void path_reflesh(char* dir);
@@ -82,6 +89,8 @@ int main() {
     perror("signal failed.");
     exit(1);
   }
+
+  setbuf(stdout, NULL);
 
   for (;;) {
     char input_string_buffer[1024] = "";
@@ -103,38 +112,32 @@ int main() {
     case none:
       break;
     }
-
   }
 }
 
 Command parse_command(ShellInfo* shell, char* str, size_t length) {
+  CommandStatus status = foreground;
   for (;;str += 1) if (*str != ' ') break;
   change_str_ast(shell, str);
-  if (starts_with(str, "alias"))
-    return new_command(str, func_alias, foreground);
-  if (starts_with(str, "unalias"))
-    return new_command(str, func_unalias, foreground);
+  if (starts_with(str, "alias"))    return new_command(str, func_alias, foreground);
+  if (starts_with(str, "unalias"))  return new_command(str, func_unalias, foreground);
   change_str_alias(shell, str);
   if (*str == '\0') return none_command();
-  if (starts_with(str, "exit"))
-    return new_command(str, func_exit, foreground);
-  if (starts_with(str, "cd"))
-    return new_command(str, func_cd, foreground);
-  if (starts_with(str, "ls"))
-    return new_command(str, func_ls, foreground);
-  if (starts_with(str, "pushd"))
-    return new_command(str, func_pushd, foreground);
-  if (starts_with(str, "dirs"))
-    return new_command(str, func_dirs, foreground);
-  if (starts_with(str, "popd"))
-    return new_command(str, func_popd, foreground);
-  if (starts_with(str, "history"))
-    return new_command(str, func_history, foreground);
-  if (starts_with(str, "!"))
-    return before_command(shell, str);
-  if (starts_with(str, "prompt"))
-    return new_command(str, func_prompt, foreground);
-  return new_command(str, execute_command, foreground);
+  if (starts_with(str, "exit"))     return new_command(str, func_exit, foreground);
+  if (starts_with(str, "cd"))       return new_command(str, func_cd, foreground);
+  if (starts_with(str, "ls"))       return new_command(str, func_ls, foreground);
+  if (starts_with(str, "pushd"))    return new_command(str, func_pushd, foreground);
+  if (starts_with(str, "dirs"))     return new_command(str, func_dirs, foreground);
+  if (starts_with(str, "popd"))     return new_command(str, func_popd, foreground);
+  if (starts_with(str, "history"))  return new_command(str, func_history, foreground);
+  if (starts_with(str, "!"))        return before_command(shell, str);
+  if (starts_with(str, "prompt"))   return new_command(str, func_prompt, foreground);
+  if (starts_with(str, "cat"))      return new_command(str, func_cat, foreground);
+  if (starts_with(str, "echo"))     return new_command(str, func_echo, foreground);
+  if (starts_with(str, "wc"))       return new_command(str, func_wc, foreground);
+  int iter = strlen(str) - 1; for (;iter >= 0;) if (str[iter] == ' ') iter--; else break;
+  if (str[iter] == '&') { str[iter] = '\0'; status = background; }
+  return new_command(str, execute_command, status);
 }
 
 void change_str_alias(ShellInfo* shell, char* str) {
@@ -149,7 +152,6 @@ void change_str_alias(ShellInfo* shell, char* str) {
         iter += strlen(shell->ailias[a_n].before) - 1;
         strcpy(str, buf);
       }
-    
   }
 }
 
@@ -194,7 +196,7 @@ bool check_arg(char* arg, char* cmd_name) {
   strcpy(str, arg);
   iter += strlen(cmd_name);
   for (;;) if (str[iter] == ' ') iter++; else break;
-  if (str[iter] != '\0') { printf("Error : There is a character after \"%s\"\n", cmd_name); return false; }
+  if (str[iter] != '\0') return false;
   return true;
 }
 
@@ -248,25 +250,37 @@ void exit_shell() {
 }
 
 void func_exit(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "exit")) return;
+  if (!check_arg(shell->current_command.argument, "exit")) { printf("Error : There is a character after \"exit\"\n"); return; }
   exit_shell();
 }
 
+bool path_exist(ShellInfo* shell, char* path) {
+  if (path[0] == '/' && !does_exist_directory(path)) return false;
+  if (path[0] != '/' || !does_exist_directory(path)) {
+    strcpy(path, shell->current_dir);
+    strcat(path, "/");
+    strcat(path, shell->current_command.argument + strlen("cd"));
+    if (!does_exist_directory(path)) return false;
+  }
+  return true;
+}
+
 void func_cd(ShellInfo* shell) {
-  struct stat statBuf;
-  char arg[1024];
-  strcpy(arg, shell->current_dir);
-  strcat(arg, "/");
-  strcat(arg, shell->current_command.argument + strlen("cd"));
-  if (!does_exist_directory(arg)) return;
-  strcpy(shell->current_dir, arg);
+  char arg[1024]; int iter = strlen("cd");
+  for (;;) if (shell->current_command.argument[iter] == ' ') iter++; else break;
+  strcpy(arg, shell->current_command.argument + iter);
+  if (path_exist(shell, arg)) strcpy(shell->current_dir, arg);
 }
 
 void func_ls(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "ls")) return;
+  char path[1024]; int iter = strlen("ls");
+  for (;;) if (shell->current_command.argument[iter] == ' ') iter++; else break;
+  strcpy(path, shell->current_command.argument + iter);
+  if (path[0] != '\0') if (!path_exist(shell, path)) return;
+  if (path[0] == '\0') strcpy(path, shell->current_dir);
   DIR* dir;
   struct dirent* dp;
-  if ((dir = opendir(shell->current_dir)) == NULL) { perror(shell->current_dir); return; }
+  if ((dir = opendir(path)) == NULL) { perror(path); return; }
   for (dp = readdir(dir);dp != NULL;dp = readdir(dir)) {
     printf("\t%s\n", dp->d_name);
   }
@@ -274,12 +288,12 @@ void func_ls(ShellInfo* shell) {
 }
 
 void func_pushd(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "pushd")) return;
+  if (!check_arg(shell->current_command.argument, "pushd")) { printf("Error : There is a character after \"pushd\"\n"); return; }
   strcpy(shell->dir_stack[shell->dir_stack_num++], shell->current_dir);
 }
 
 void func_dirs(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "dirs")) return;
+  if (!check_arg(shell->current_command.argument, "dirs")) { printf("Error : There is a character after \"dirs\"\n"); return; }
   if (shell->dir_stack_num == 0) { printf("Error : no item in directory stack\n"); return; }
   printf("directory stack\n");
   for (int i = shell->dir_stack_num - 1; i >= 0; i--)
@@ -287,13 +301,13 @@ void func_dirs(ShellInfo* shell) {
 }
 
 void func_popd(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "popd")) return;
+  if (!check_arg(shell->current_command.argument, "popd")) { printf("Error : There is a character after \"popd\"\n"); return; }
   if (shell->dir_stack_num == 0) { printf("Error : no item in directory stack\n"); return; }
   strcpy(shell->current_dir, shell->dir_stack[--shell->dir_stack_num]);
 }
 
 void func_history(ShellInfo* shell) {
-  if (!check_arg(shell->current_command.argument, "history")) return;
+  if (!check_arg(shell->current_command.argument, "history")) { printf("Error : There is a character after \"history\"\n"); return; }
   if (shell->buffer_command_num == 0) { printf("Error : no command has been executed so far\n"); return; }
   printf("command history\n");
   for (int i = 0; i < shell->buffer_command_num; i++)
@@ -355,12 +369,121 @@ void func_unalias(ShellInfo* shell) {
   }
 }
 
+bool does_exist_file(char* path) {
+  path_reflesh(path);
+  struct stat statbuf;
+  stat(path, &statbuf);
+  if (S_ISREG(statbuf.st_mode)) return true;
+  fprintf(stderr, "%s: no such file\n", path);
+  return false;
+}
+
+bool file_exist(ShellInfo* shell, char* path) {
+  char buf[1024]; strcpy(buf, path);
+  if (path[0] == '/' && !does_exist_file(path)) return false;
+  if (path[0] != '/' || !does_exist_file(path)) {
+    strcpy(path, shell->current_dir);
+    strcat(path, "/");
+    strcat(path, buf);
+    if (!does_exist_file(path)) return false;
+  }
+  return true;
+}
+
+void func_cat(ShellInfo* shell) {
+  char path[1024]; int iter = strlen("cat");
+  for (;;) if (shell->current_command.argument[iter] == ' ') iter++; else break;
+  strcpy(path, shell->current_command.argument + iter);
+  if (path[0] != '\0') if (!file_exist(shell, path)) return;
+  if (path[0] == '\0') {
+    char buf[1024]; ssize_t nread;
+    while ((nread = read(0, buf, sizeof(buf))) > 0) write(0, buf, nread);
+    return;
+  }
+  FILE* fp;
+  if ((fp = fopen(path, "r")) == NULL) { perror(path); return; }
+  for (;;) {
+    char buf[1024];
+    if (fscanf(fp, "%1023[^\n]%*[^\n]", buf) == EOF) break;
+    fscanf(fp, "%*c");
+    printf("%s\n", buf);
+  }
+  fclose(fp);
+}
+
+void func_echo(ShellInfo* shell) {
+  char arg[1024], * args[128]; strcpy(arg, shell->current_command.argument + strlen("echo"));
+  int count = split_blank(args, arg);
+  for (int i = 0; i < count; i++) printf("%s ", args[i]);
+  printf("\n");
+}
+
+void wc(FILE* fp, char* filename, int* nlines, int* nwords, int* nbytes) {
+  char buf[1024];
+  bool inword = false;
+  int nl = 0, nw = 0, nb = 0;
+  ssize_t nread;
+  while (1) {
+    if (filename)  if ((nread = fread(buf, 1, sizeof(buf), fp)) <= 0) break;
+    if (!filename) if ((nread = read(0, buf, sizeof(buf))) <= 0) break;
+    nb += nread;
+    for (ssize_t i = 0; i < nread; i++) {
+      char c = buf[i];
+      if (c == '\n') nl++;
+      if (inword && !isalpha(c)) inword = false;
+      else if (!inword && isalpha(c)) { inword = true; nw++; }
+    }
+  }
+  if (filename) printf("% 8d% 8d% 8d %s\n", nl, nw, nb, filename);
+  else printf("% 8d% 8d% 8d\n", nl, nw, nb);
+  *nlines += nl; *nwords += nw; *nbytes += nb;
+}
+
+void func_wc(ShellInfo* shell) {
+  int nlines = 0, nwords = 0, nbytes = 0;
+  char path[1024]; int iter = strlen("wc");
+  for (;;) if (shell->current_command.argument[iter] == ' ') iter++; else break;
+  strcpy(path, shell->current_command.argument + iter);
+  if (path[0] == '\0') {
+    wc(stdin, NULL, &nlines, &nwords, &nbytes);
+    return;
+  }
+  char* args[128];
+  int count = split_blank(args, path);
+  for (int i = 0; i < count; i++) {
+    char buf[1024]; strcpy(buf, args[i]);
+    if (!file_exist(shell, buf)) continue;
+    FILE* fp = fopen(buf, "r");
+    if (!fp) { perror("fopen"); continue; }
+    wc(fp, buf, &nlines, &nwords, &nbytes);
+    fclose(fp);
+  }
+  if (count > 1) printf("% 8d% 8d% 8d total\n", nlines, nwords, nbytes);
+}
+
+int split_blank(char** args, char* arg) {
+  int count = 0;
+  for (;;) {
+    while (*arg == ' ') arg++;
+    if (*arg == '\0') break;
+    args[count++] = arg;
+    while (*arg && *arg != ' ') arg++;
+    if (*arg == '\0') break;
+    *arg++ = '\0';
+  }
+  args[count] = NULL;
+  return count;
+}
+
 void execute_command(ShellInfo* shell) {
   int pid, status;
   if ((pid = fork()) == -1) { exit(1); }
   if (pid == 0) {
-    system(shell->current_command.argument);
-    exit(0);
+    char* args[128];
+    int count = split_blank(args, shell->current_command.argument);
+    execvp(args[0], args);
+    perror(args[0]);
+    exit(-1);
   }
   if (shell->current_command.status == background) return;
   wait(&status);
