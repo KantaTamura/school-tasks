@@ -1,3 +1,5 @@
-cd ./code
-ls /home/i0ta/code
-cd ../../
+pwd
+cd code
+pwd
+history
+
